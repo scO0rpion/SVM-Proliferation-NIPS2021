@@ -1,0 +1,350 @@
+---
+title: "R Notebook"
+output: 
+  pdf_document:
+    keep_tex: True
+---
+
+```{r}
+library(tidyverse)
+library(stringr)
+library(broom)
+library(glue)
+library(npreg)
+```
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(fig.path = "output/figures_nips/")
+```
+
+```{r helpers}
+
+r2glm <- function(model) {
+
+  summaryLog <- summary(model)
+  1 - summaryLog$deviance / summaryLog$null.deviance
+
+}
+
+minimal_theme <- theme(panel.background = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.spacing = unit(2, "mm"),
+        legend.title = element_text(size = 8),
+        axis.title = element_text(size = 8),
+        strip.text = element_text(size = 8),
+        plot.title = element_text(hjust=0.5))
+```
+
+## Read the Data
+```{r}
+##### Directory of the dataset for L2 ####################################
+base_dir <- "./output"
+csv_files <- list.files(path = paste0(base_dir, "/datasets_l2"), pattern = "*.csv")
+n_simulation <- as.integer(sub(".*-(\\d*)-.*", "\\1", csv_files))
+
+##### READ AND PROCESS DATA ##############################################
+file_name_l2 <- csv_files[7]
+n_sim        <- n_simulation[7]
+simulation   <- read_csv(paste(base_dir, "datasets_l2", file_name_l2, sep="/"))
+
+##### Simulations with varying n_sim #####################################
+files_sim <- list.files(path = paste0(base_dir, "/datasets_gaussian"), pattern = "*.csv", full.names = T)
+n_simm <- as.integer(sub(".*-(\\d*)-.*", "\\1", files_sim))
+bind_rows( lapply(files_sim, 
+function(file_name) {
+  simulation <- read_csv(file_name)
+  res <- simulation %>% select(-one_of("X1"))
+  return(res)
+}), .id = "ID" ) -> varying_nsim
+
+#### L1 Simulations ######################################################
+files_l1 <- list.files(path = paste0(base_dir, "/datasets_l1"), pattern = "*.csv")
+n_simulation_l1 <- as.integer(sub(".*-(\\d*)-.*", "\\1", files_l1))
+# read the first one
+file_name_ <- files_l1[1]
+n_sim_ <- n_simulation_l1[1]
+probabilities_l1 <- read_csv(paste(base_dir, "datasets_l1", file_name_,sep="/"))
+
+##### Range of Dimensions for which simulation was conducted #############
+simulation %>%
+  select(NSample, Dimension) %>%
+  distinct() -> dimensions
+N <- dimensions[[1]]
+D <- dimensions[[2]]
+
+#### Main data that analysis will be performed upon #####################
+probabilities <- simulation %>%
+                    mutate(Tau = Dimension / (2* NSample * log(NSample)),
+                           Success = as.integer(prob * n_sim),
+                           Failure = n_sim - Success,
+                           probSize = NSample ** -0.5) %>%
+                    group_by(Distribution) %>%
+                    summarise_all(list)
+```
+
+# Visualizations
+
+## Sensitivity to number of simulations
+```{r}
+varying_nsim <- left_join(varying_nsim, tibble(ID = as.character(1:length(files_sim)), NSim = n_simm), by = "ID") %>%
+                group_by(NSim) %>% # if there are two datasets with the same distribution and nsim then this line will break
+                mutate(.id = cur_group_id())
+x <- distinct(varying_nsim, NSim, .id) 
+x0 <- paste("Num Simulation:", x$NSim)
+names(x0) <- x$.id
+
+varying_nsim  %>%
+  ggplot() +
+  geom_raster(aes(NSample, Dimension, fill = prob), interpolate = F) +
+  geom_contour(aes(NSample, Dimension, z = prob), breaks = c(0.1,0.4,0.6,0.9), size = 0.2, alpha = 0.7, color="black") +
+  geom_line(aes(x = N, y = 2*N*log(N)) ,data= data.frame(N = unique(N)), color = "red") + 
+  scale_fill_gradient(low="blue", high="yellow") +
+  minimal_theme +
+  theme(aspect.ratio = 1.3) + 
+  facet_grid(cols = vars(.id), labeller = labeller(.id = x0)) +
+  labs(x = "Number of Samples", y="Number of features (Dimension)") +
+  guides(fill= guide_colorbar(title=""))
+  
+```
+
+## Probability Heatmaps
+
+```{r}
+# raw heatmaps
+probabilities %>%
+  unnest(everything()) %>%
+  ggplot() + 
+  geom_raster(aes(NSample, Dimension, fill = prob), interpolate = F) +
+  geom_line(aes(x = N, y = 2*N*log(N)) ,data= data.frame(N = unique(N)), color = "red") + 
+  scale_fill_gradient(low="blue", high="yellow") +
+  minimal_theme +
+  theme(aspect.ratio = 1) +
+  facet_wrap(~ Distribution) +
+  labs(x = "Number of Samples", y="Number of features (Dimension)") +
+  guides(fill = guide_colorbar(title=""))
+
+# quantile plots
+probabilities %>%
+  unnest(everything()) %>%
+  ggplot() + 
+  geom_contour(aes(NSample, Dimension, z = prob, color = Distribution), 
+               breaks = c(0.2,0.4,0.6, 0.8,0.9), alpha = 0.3, size = 0.8) +
+  geom_line(aes(x = N, y = 2*N*log(N)) ,data= data.frame(N = unique(N)), color = "red") + 
+  scale_color_ordinal() + 
+  minimal_theme +
+  theme(legend.position = c(0.15,0.8),
+        aspect.ratio = 0.65,
+        axis.title=element_text(size=12),
+        axis.text=element_text(size=10)) +
+  labs(x = "Number of Samples", y="Number of features (Dimension)") +
+  guides(fill = guide_colorbar(title=""))
+```
+
+## Determining Width of Transition
+
+```{r}
+ilink <- function(x) qnorm(x)
+
+probabilities %>%
+  unnest(everything()) %>%
+  filter(0.1 < prob & prob < 0.9) %>%
+  group_by(NSample, Distribution) %>%
+  summarise(scaledWidth = (max(Tau) - min(Tau))/( ilink(0.9) - ilink(0.1) ) * sqrt(log(NSample))) %>%
+  ggplot(aes(x = NSample, y= scaledWidth, color = Distribution)) +
+  geom_line(size=0.5, alpha=0.2) +
+  geom_smooth(linetype="dashed", method="lm", se=F, alpha =0.6) +
+  scale_color_hue() +
+  minimal_theme +
+  theme(aspect.ratio = 0.65) +
+  labs(x = "Number of Samples (n)", y = "Scaled Width")
+
+```
+
+## Comparing L1 with L2
+```{r}
+
+probabilities_l1 %>%
+  mutate(Tau = Dimension / (2* NSample * log(NSample))) %>%
+  group_by(Distribution) %>%
+  summarise_all(list) %>%
+  bind_rows( filter(probabilities, Distribution == "Gaussian")) %>%
+  mutate(ID = paste0("L", row_number())) %>%
+  unnest(everything()) -> combined
+
+ggplot(combined, aes(NSample, Dimension)) + 
+  geom_raster(aes(fill = prob), interpolate = F) +
+  #geom_contour(aes(z = prob), breaks = c(0.8), size = 0.5) +
+  scale_fill_gradient(low="blue", high="yellow") +
+  minimal_theme +
+  theme(aspect.ratio = 1) +
+  facet_wrap(~ ID, scale = "free") +
+  labs(x = "Number of Samples (n)", y="Number of features (d)") +
+  guides(fill = guide_colorbar(title=""))
+
+```
+
+# Analysis
+
+## Choosing the link function
+```{r regression}
+# GLM for gaussian dataset. Here we try to figure which link function is more appropriate
+probabilities %>%
+  unnest(everything()) %>%
+  expand_grid(link = c("probit", "logit", "cauchit"), exponent = c(0.1,0.25,0.5,1)) %>%
+  mutate(Tau_nonlinear = Tau ** exponent) %>%
+  nest(-c("link","exponent")) %>%
+  mutate(model = map2(data, link, ~ glm( cbind(Success, Failure) ~ 
+                                        (Tau_nonlinear + Tau)*probSize +probSize*Distribution -Distribution, 
+                                         data= .x , family = binomial(link= .y))),
+         aug    = map(model, augment, type.predict = "link", type.residuals = "deviance"),
+         R2     = map(model, r2glm)) -> all_dist_regressed
+
+# From the looks of the following figure we can see that probit fits well. 
+unnest(all_dist_regressed,"aug") %>%
+  filter(Distribution == "Gaussian") %>%
+  ggplot(aes(x = .fitted, y = .resid)) + 
+  geom_point(size = 0.5, alpha = 0.1) +
+  geom_smooth(method="loess", size= 0.5, se=F) + 
+  minimal_theme +
+  theme(aspect.ratio = 1,
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 14),
+        axis.text.x = element_text(angle = 28),
+        strip.text = element_text(size=12)) +
+  facet_grid(rows = vars(link), cols = vars(exponent), scales = "free_x",
+             labeller = labeller(exponent = as_labeller(function(string) paste("Exponent:", string)))) +
+  labs(x = "Fitted", y = "Residuals")
+
+# residual diagnostics
+unnest(all_dist_regressed,"aug") %>%
+    filter(Distribution == "Gaussian") %>%
+  ggplot(aes(sample = .resid)) + 
+  geom_qq(size = 0.5, alpha = 0.1) +
+  geom_abline(slope = 1, color = "red", size = 0.5) + 
+  minimal_theme +
+  theme(aspect.ratio = 1,
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 14),
+        axis.text.x = element_text(angle = 28),
+        strip.text = element_text(size=12)) +
+  facet_grid(rows = vars(link), cols = vars(exponent), 
+             labeller = labeller(exponent = as_labeller(function(string) paste("Exponent:", string)))) +
+  labs(y = "Fitted Residuals", x = "Theoretical")
+
+# table of R squares
+all_dist_regressed %>%
+  unnest(R2) %>%
+  select(R2, link, exponent) %>%
+  pivot_wider(names_from = "link", values_from = "R2")
+```
+
+
+## Parametric Regression and Anova Test
+
+```{r}
+probabilities %>%
+  unnest(everything()) %>%
+  mutate(Success = as.integer(prob * n_sim),
+         Failure = n_sim - Success,
+         probSize = NSample ** -0.5,
+         tau_nonlinear = log(Tau),
+         tau_thresh = Tau > 1,
+         tau = Tau-1,
+         Distribution = as.factor(Distribution),
+         Distribution = relevel(Distribution, ref="Gaussian")) -> processed_probs
+  
+# testing whether we need non-decaying bias and non decaying coefs for tau
+formulas <- list(
+  cbind(Success, Failure) ~ (tau_nonlinear + tau)*probSize,             # fix tau coeff
+  cbind(Success, Failure) ~ (tau_nonlinear + tau)*probSize              # tau coefs only depends on probSize
+                           +probSize*Distribution - Distribution,       # bias is decaying
+  cbind(Success, Failure) ~ (tau_nonlinear + tau)*Distribution*probSize # full model
+)
+
+formulas <- list(
+  cbind(Success, Failure) ~ (tau_nonlinear + tau)*probSize,             # fix tau coeff
+  cbind(Success, Failure) ~ (tau_nonlinear + tau)*probSize*Distribution              # tau coefs only depends on probSize
+                            - Distribution       # bias is decaying
+                            -(tau_nonlinear + tau) * Distribution + tau + tau_nonlinear,
+  cbind(Success, Failure) ~ (tau_nonlinear + tau)*Distribution*probSize # full model
+)
+
+
+models <- lapply(formulas , function(formula) glm(formula, data=processed_probs, family = binomial(link="probit") ) )
+lapply(models,summary)
+do.call(anova, c(models, test = "Chisq"))
+```
+
+## Motivation For the Parametric Model
+
+```{r}
+transition_zone <- probabilities %>%
+  unnest(everything()) %>%
+  filter(NSample %in% c(50, 70, 90) & Distribution == "Gaussian") %>%
+  group_by(NSample, Distribution) %>%
+  summarize(q = min(Tau[ prob > 0.1 ]),
+            qbar = max(Tau[ prob < 0.9 ]))
+
+# slice tau dependense on n?
+
+# slice n dependence on tau
+augment(models[[2]], processed_probs, type.predict = "response") %>%
+  filter(NSample %in% c(50, 70, 90) & Distribution == "Gaussian") %>%
+  ggplot() +
+  geom_rect(aes(ymin=-Inf, ymax=Inf ,xmin = q, xmax = qbar, fill = factor(NSample)), 
+            alpha=0.05, data = filter(transition_zone, Distribution == "Gaussian")) +
+  geom_vline(aes(xintercept = q, colour = factor(NSample)), 
+            alpha = 0.2, data = filter(transition_zone, Distribution == "Gaussian")) +
+  geom_vline(aes(xintercept = qbar, colour = factor(NSample)), 
+            alpha = 0.2, data = filter(transition_zone, Distribution == "Gaussian")) +
+  geom_vline(xintercept = 1.0, alpha = 0.6) +
+  geom_point(aes(x = Tau, y = prob, colour = factor(NSample)), size=0.5, alpha = 0.5) +
+  geom_line(aes(x = Tau, y = .fitted, colour = factor(NSample))) +
+  scale_color_hue() +
+  minimal_theme +
+  theme(aspect.ratio = 0.7,
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 14)) +
+  guides(colour = guide_legend(title = "n"), fill = guide_legend(title = "n")) +
+  labs(y = "Observed Probabilities", x = "Tau")
+
+# fixed tau dependense on n?
+augment(models[[2]], processed_probs, type.predict = "link") %>%
+  mutate(buckets = cut(Tau, breaks = seq(0.4,1.6, by = 0.1)) ) %>%
+  filter(!is.na(buckets) & Distribution == "Gaussian") %>%
+  ggplot(aes(x = NSample, y = ilink(prob), color = buckets)) +
+  geom_point(size=0.5, alpha = 0.5) +
+  geom_smooth(method = "lm", se=F) +
+  minimal_theme + 
+  theme(aspect.ratio = 0.7,
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 14)) +
+  scale_color_hue() + 
+  guides(colour = guide_legend(title = "Tau"), fill = guide_legend(title = "Tau")) +
+  labs(y = "ilink(Observed Probabilities)", x = "Number of Samples (n)")
+
+```
+
+## Diagnostics
+```{r}
+augment(models[[2]], processed_probs, type.predict = "link") %>%
+  ggplot(aes(x = .fitted, y= .resid)) +
+  geom_point(color = "black", alpha = 0.05) +
+  geom_smooth(color="red", method="loess", alpha = 0.5,size = 0.5, se=F) +
+  minimal_theme +
+  theme(aspect.ratio = 0.7,
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 14)) +
+  labs(x = "Logistic Regression Fit (link)", y= "Residuals (Deviance)")
+
+augment(models[[2]], processed_probs, type.residuals = "deviance") %>%
+  ggplot(aes(sample = .resid)) +
+  geom_qq(color = "black", alpha = 0.05) +
+  geom_abline(slope = 1, color="red") +
+  minimal_theme +
+  theme(aspect.ratio = 0.7,
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 14)) +
+  labs(x = "Theoretical", y= "Residuals (Deviance)")
+  
+```
