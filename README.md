@@ -1,7 +1,13 @@
-# SVM-Proliferation-NIPS2021
-## Support vector machines and linear regression onlycoincide with very high-dimensional features
 
-This repository is the codebase for experiment section of --ref-- paper. In order to reproduce our figures, we have included the datasets which we used for the analyses. 
+# Support vector machines and linear regression coincide with very high-dimensional features
+
+This repository is the official codebase of --paper-- . In order to reproduce our figures, we have provided the experiments which we used for the analyses alongside with the code to produce the experiments. 
+
+## Requirements
+To install the requirements:
+```
+pip install -r requirements.txt
+```
 
 **Generate Datasets:** Python files can be used to generate the datasets. Note that our code has the flexibility to run in parallel; number of cores can be specified, if not the code will run in a serialized fashion. The seed is not fixed in our code.
 
