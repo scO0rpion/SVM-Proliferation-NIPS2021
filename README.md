@@ -17,8 +17,8 @@ Python files can be used to generate the datasets. Note that our code has the fl
 
 | File        | Syntax                                                              | Example                             |
 |-------------|---------------------------------------------------------------------|-------------------------------------|
-| [`l1_svm.py`](l2_suite.py) | `python l1_svm.py <path_to_save_files> <num_cores>`  | `python l1_svm.py "./datasets_l1" 4`|
-| [`l2_svm.py`](l1_suite.py) | `python l2_svm.py <path_to_save_files> <num_cores>`  | `python l2_svm.py "./datasets_l2" 4`|
+| [`l1_svm.py`](l1_svm.py) | `python l1_svm.py <path_to_save_files> <num_cores>`  | `python l1_svm.py "./datasets_l1" 4`|
+| [`l2_ssuite.py`](l1_suite.py) | `python l2_suite.py <path_to_save_files> <num_cores>`  | `python l2_suite.py "./datasets_l2" 4`|
 
 ## Analyses
 The analyses are done in R where the [R-markdown](NIPS2021.Rmd) file is provided. Please make sure the path to datasets directories are correct (in case one changes the defaults). 
