@@ -9,15 +9,6 @@ from itertools import product
 from datetime import datetime
 import sys
 
-# GLobal Variables
-kwargs = {'fit_intercept': False, 'dual': True, 'C': 1e8, 'tol': 1e-6, 'max_iter': 5000}
-method = "CVX"
-n_sim = 400
-N = range(40, 100, 2)
-D = range(100, 1000, 10)
-clf = LinearSVC(**kwargs)
-parallel = Parallel(n_jobs=3, backend="loky")
-
 
 def replicate(n_times, par = True):
     global parallel
@@ -35,7 +26,7 @@ def replicate(n_times, par = True):
     return inner_func
 
 
-@replicate(n_sim)
+@replicate(n_sim, par=par)
 def generate_sol_sklearn(n_sample, dimension, distribution="Gaussian", classifier=None):
     classifier = classifier or LinearSVC(**kwargs)
     observed = random_generator(distribution)(n_sample, dimension) / np.sqrt(dimension)
@@ -45,7 +36,7 @@ def generate_sol_sklearn(n_sample, dimension, distribution="Gaussian", classifie
     return flag
 
 
-@replicate(n_sim)
+@replicate(n_sim, par=par)
 def generate_sol_cvx(n_sample, dimension, distribution = "Gaussian"):
     observed = random_generator(distribution)(n_sample, dimension) / np.sqrt(dimension)
     labels = np.repeat([-1, 1], int((n_sample + 1) / 2))[:n_sample, None]  # drop last one if necessary
@@ -69,9 +60,18 @@ def random_generator(distribution, state = None):
 
 
 if __name__ == "__main__":
-
+    
+    # GLobal Variables
+    kwargs = {'fit_intercept': False, 'dual': True, 'C': 1e8, 'tol': 1e-6, 'max_iter': 5000}
+    method = "CVX"
+    n_sim = 400
+    N = range(40, 100, 2)
+    D = range(100, 1000, 10)
+    clf = LinearSVC(**kwargs)
+    num_cores = 1 if sys.argv[-1] is '' else int(sys.argv[-1])
+    par = num_cores > 1
+    parallel = Parallel(n_jobs=num_cores, backend="loky")   
     suite = ["Uniform", "Gaussian", "GaussianBiased", "Bernoulli", "Laplacian", "Radamacher"]
-    suite = ["Gaussian"]
 
     df = pd.DataFrame(data=product(N, D, suite), columns=["NSample", "Dimension", "Distribution"])
     df["prob"] = 0.0
