@@ -8,12 +8,6 @@ from datetime import datetime
 import sys
 import cvxopt as cvx
 
-# GLobal Variables
-n_sim = 400
-N = range(10, 70, 1)
-D = range(80, 1000, 5)
-parallel = Parallel(n_jobs=4, backend="loky")
-
 
 def replicate(n_times, par = True):
     global parallel
@@ -31,7 +25,7 @@ def replicate(n_times, par = True):
     return inner_func
 
 
-@replicate(n_sim, par=False)
+@replicate(n_sim, par = par)
 def generate_sol(n_sample, dimension, distribution="Gaussian"):
     observed = random_generator(distribution)(n_sample, dimension) / np.sqrt(dimension)
     c = cvx.matrix(np.vstack([-1.0] * n_sample))  # minus is to account for maximization
@@ -61,9 +55,15 @@ def test():
     return random_generator("Gaussian")
 
 if __name__ == "__main__":
-
+    
+    # GLobal Variables
+    n_sim = 400
+    N = range(10, 70, 1)
+    D = range(80, 1000, 5)
+    num_cores = 1 if sys.argv[-1] is '' else int(sys.argv[-1])
+    par = num_cores > 1
+    parallel = Parallel(n_jobs=num_cores, backend="loky")
     suite = ["Uniform", "Gaussian", "GaussianBiased", "Bernoulli", "Laplacian", "Radamacher"]
-    suite = ["Gaussian"]
     df = pd.DataFrame(data=product(N, D, suite), columns=["NSample", "Dimension", "Distribution"])
     df["prob"] = 0.0
 
