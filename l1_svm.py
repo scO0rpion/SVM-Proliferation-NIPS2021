@@ -53,6 +53,10 @@ def random_generator(distribution, state = None):
 
 if __name__ == "__main__":
     
+    # Args
+    base_path = './datasets_l1' if sys.argv[0]  is '' else sys.argv[0]
+    num_cores = 1   if sys.argv[-1] is '' else int(sys.argv[-1])
+    
     # GLobal Variables
     n_sim = 400
     N = range(10, 70, 1)
@@ -71,4 +75,4 @@ if __name__ == "__main__":
 
     date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
     # Save results
-    df.to_csv(f"L1SVMProbs-{n_sim}-{date}.csv", index=False)
+    df.to_csv(base_path + "/" + f"L1SVMProbs-{n_sim}-{date}.csv", index=False)
