@@ -61,6 +61,10 @@ def random_generator(distribution, state = None):
 
 if __name__ == "__main__":
     
+    # Args
+    base_path = './datasets_l2' if sys.argv[0]  is '' else sys.argv[0]
+    num_cores = 1   if sys.argv[-1] is '' else int(sys.argv[-1])
+    
     # GLobal Variables
     kwargs = {'fit_intercept': False, 'dual': True, 'C': 1e8, 'tol': 1e-6, 'max_iter': 5000}
     method = "CVX"
@@ -68,7 +72,6 @@ if __name__ == "__main__":
     N = range(40, 100, 2)
     D = range(100, 1000, 10)
     clf = LinearSVC(**kwargs)
-    num_cores = 1 if sys.argv[-1] is '' else int(sys.argv[-1])
     par = num_cores > 1
     parallel = Parallel(n_jobs=num_cores, backend="loky")   
     suite = ["Uniform", "Gaussian", "GaussianBiased", "Bernoulli", "Laplacian", "Radamacher"]
@@ -84,4 +87,4 @@ if __name__ == "__main__":
 
     date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
     # Save results
-    df.to_csv(f"SVMProbs-{method}-{n_sim}-{date}.csv", index=False)
+    df.to_csv(base_path + "/" + f"SVMProbs-{method}-{n_sim}-{date}.csv", index=False)
