@@ -18,4 +18,5 @@ Python files can be used to generate the datasets. Note that our code has the fl
 | [`l1_svm.py`](l2_suite.py) | `python l1_svm.py <path_to_save_files> <num_cores>`  | `python l1_svm.py "./datasets_l2" 4`|
 | [`l2_svm.py`](l1_suite.py) | `python l2_svm.py <path_to_save_files> <num_cores>`  | `python l2_svm.py "./datasets_l2" 4`|
 
-**Analyses:** The analysis is done in R where the R-markdown file is provided. 
+## Analyses
+The analysis is done in R where the R-markdown file is provided. 
