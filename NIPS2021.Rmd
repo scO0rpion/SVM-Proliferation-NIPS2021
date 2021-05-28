@@ -43,8 +43,8 @@ csv_files <- list.files(path = paste0(base_dir, "/datasets_l2"), pattern = "*.cs
 n_simulation <- as.integer(sub(".*-(\\d*)-.*", "\\1", csv_files))
 
 ##### READ AND PROCESS DATA ##############################################
-file_name_l2 <- csv_files[7]
-n_sim        <- n_simulation[7]
+file_name_l2 <- csv_files[1]    # change this value if you generated other datasets
+n_sim        <- n_simulation[1] # change this accordingly 
 simulation   <- read_csv(paste(base_dir, "datasets_l2", file_name_l2, sep="/"))
 
 ##### Simulations with varying n_sim #####################################
