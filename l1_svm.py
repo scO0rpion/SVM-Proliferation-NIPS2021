@@ -9,12 +9,12 @@ import sys
 import cvxopt as cvx
 
 # Args
-base_path = './datasets_l1' if sys.argv[0]  is '' else sys.argv[0]
-num_cores = 1  if sys.argv[-1] is '' else int(sys.argv[-1])
+base_path = './datasets_l1' if sys.argv[0] == '' else sys.argv[0]
+num_cores = 1 if sys.argv[-1] == '' else int(sys.argv[-1])
     
 # GLobal Variables
 n_sim = 400
-num_cores = 1 if sys.argv[-1] is '' else int(sys.argv[-1])
+num_cores = 1 if sys.argv[-1] == '' else int(sys.argv[-1])
 par = num_cores > 1
 parallel = Parallel(n_jobs=num_cores, backend="loky")
 
