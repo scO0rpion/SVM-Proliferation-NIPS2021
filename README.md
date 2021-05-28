@@ -3,8 +3,7 @@
 
 This repository is the official codebase of --paper-- . In order to reproduce our figures, we have provided the experiments which we used for the analyses alongside with the code to produce the experiments. 
 
-<embed src="https://github.com/scO0rpion/SVM-Proliferation-NIPS2021/blob/main/figures/unnamed-chunk-7-1.pdf" width="500" height="375" 
- type="application/pdf">
+![image](figures/thumbnail.jpg)
 
 ## Requirements
 To install the requirements:
