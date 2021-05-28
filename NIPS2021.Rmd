@@ -6,11 +6,11 @@ output:
 ---
 
 ```{r}
-library(tidyverse)
-library(stringr)
-library(broom)
-library(glue)
-library(npreg)
+require(tidyverse)
+require(stringr)
+require(broom)
+require(glue)
+require(npreg)
 ```
 
 ```{r, include = FALSE}
