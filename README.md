@@ -10,4 +10,4 @@ This repository is the codebase for experiment section of --ref-- paper. In orde
 | `l1_svm.py` | `python l1_svm.py <num_cores>`  |
 | `l2_svm.py` | `python l2_svm.py <num_cores>`  |
 
-**Analyses** The analysis is done in R where the R-markdown file is provided. 
+**Analyses:** The analysis is done in R where the R-markdown file is provided. 
