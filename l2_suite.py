@@ -10,6 +10,19 @@ from datetime import datetime
 import sys
 
 
+# Args
+base_path = './datasets_l2' if sys.argv[0]  is '' else sys.argv[0]
+num_cores = 1   if sys.argv[-1] is '' else int(sys.argv[-1])
+
+# GLobal Variables
+kwargs = {'fit_intercept': False, 'dual': True, 'C': 1e8, 'tol': 1e-6, 'max_iter': 5000}
+method = "CVX" # or SKLEARN
+n_sim = 400
+par = num_cores > 1
+if par:
+    parallel = Parallel(n_jobs=num_cores, backend="loky")
+
+
 def replicate(n_times, par = True):
     global parallel
     def inner_func(func):
@@ -61,21 +74,11 @@ def random_generator(distribution, state = None):
 
 if __name__ == "__main__":
     
-    # Args
-    base_path = './datasets_l2' if sys.argv[0]  is '' else sys.argv[0]
-    num_cores = 1   if sys.argv[-1] is '' else int(sys.argv[-1])
     
-    # GLobal Variables
-    kwargs = {'fit_intercept': False, 'dual': True, 'C': 1e8, 'tol': 1e-6, 'max_iter': 5000}
-    method = "CVX"
-    n_sim = 400
     N = range(40, 100, 2)
     D = range(100, 1000, 10)
-    clf = LinearSVC(**kwargs)
-    par = num_cores > 1
-    parallel = Parallel(n_jobs=num_cores, backend="loky")   
+    gen_sol = generate_sol_cvx if method is "CVX" else generate_sol_sklearn
     suite = ["Uniform", "Gaussian", "GaussianBiased", "Bernoulli", "Laplacian", "Radamacher"]
-
     df = pd.DataFrame(data=product(N, D, suite), columns=["NSample", "Dimension", "Distribution"])
     df["prob"] = 0.0
 

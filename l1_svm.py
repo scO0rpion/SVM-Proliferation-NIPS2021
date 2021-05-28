@@ -8,6 +8,16 @@ from datetime import datetime
 import sys
 import cvxopt as cvx
 
+# Args
+base_path = './datasets_l1' if sys.argv[0]  is '' else sys.argv[0]
+num_cores = 1  if sys.argv[-1] is '' else int(sys.argv[-1])
+    
+# GLobal Variables
+n_sim = 400
+num_cores = 1 if sys.argv[-1] is '' else int(sys.argv[-1])
+par = num_cores > 1
+parallel = Parallel(n_jobs=num_cores, backend="loky")
+
 
 def replicate(n_times, par = True):
     global parallel
@@ -52,18 +62,10 @@ def random_generator(distribution, state = None):
 
 
 if __name__ == "__main__":
-    
-    # Args
-    base_path = './datasets_l1' if sys.argv[0]  is '' else sys.argv[0]
-    num_cores = 1   if sys.argv[-1] is '' else int(sys.argv[-1])
-    
-    # GLobal Variables
-    n_sim = 400
+
+    # specifying  range
     N = range(10, 70, 1)
     D = range(80, 1000, 5)
-    num_cores = 1 if sys.argv[-1] is '' else int(sys.argv[-1])
-    par = num_cores > 1
-    parallel = Parallel(n_jobs=num_cores, backend="loky")
     suite = ["Uniform", "Gaussian", "GaussianBiased", "Bernoulli", "Laplacian", "Radamacher"]
     df = pd.DataFrame(data=product(N, D, suite), columns=["NSample", "Dimension", "Distribution"])
     df["prob"] = 0.0
