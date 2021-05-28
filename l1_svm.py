@@ -68,7 +68,6 @@ if __name__ == "__main__":
     df["prob"] = 0.0
 
     for index, row in tqdm(df.iterrows(), desc="Monte Carlo Iteration"):
-        # Surprisingly parallelizing the for loop takes longer to run the job.
         df.loc[index, "prob"] = sum(
             generate_sol(row["NSample"], row["Dimension"], distribution= row["Distribution"])
         )/ float(n_sim)
