@@ -9,7 +9,7 @@ To install the requirements:
 pip install -r requirements.txt
 ```
 
-##Generate Datasets
+## Generate Datasets
 Python files can be used to generate the datasets. Note that our code has the flexibility to run in parallel; number of cores can be specified, if not the code will run in a serialized fashion. The seed is not fixed in our code.
 
 | File        | Syntax                          |
