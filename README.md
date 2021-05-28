@@ -21,8 +21,7 @@ Python files can be used to generate the datasets. Note that our code has the fl
 | [`l2_svm.py`](l1_suite.py) | `python l2_svm.py <path_to_save_files> <num_cores>`  | `python l2_svm.py "./datasets_l2" 4`|
 
 ## Analyses
-The analyses are done in R where the [R-markdown](NIPS2021.Rmd) file is provided. 
+The analyses are done in R where the [R-markdown](NIPS2021.Rmd) file is provided. Please make sure the path to datasets directories are correct (in case one changes the defaults). 
 
-## Results
 
 
