@@ -3,6 +3,8 @@
 
 This repository is the official codebase of --paper-- . In order to reproduce our figures, we have provided the experiments which we used for the analyses alongside with the code to produce the experiments. 
 
+![image](figures/unnamed-chunk-7-1.pdf)
+
 ## Requirements
 To install the requirements:
 ```
@@ -19,4 +21,7 @@ Python files can be used to generate the datasets. Note that our code has the fl
 | [`l2_svm.py`](l1_suite.py) | `python l2_svm.py <path_to_save_files> <num_cores>`  | `python l2_svm.py "./datasets_l2" 4`|
 
 ## Analyses
-The analysis is done in R where the R-markdown file is provided. 
+The analyses are done in R where the [R-markdown](NIPS2021.Rmd) file is provided. 
+
+## Results
+
