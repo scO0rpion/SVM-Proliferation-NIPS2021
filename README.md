@@ -13,9 +13,9 @@ Our results were obtained in Python 3.8.5 environment.
 ## Generate Datasets
 Python files can be used to generate the datasets. Note that our code has the flexibility to run in parallel; number of cores can be specified, if not the code will run in a serialized fashion. The seed is not fixed in our code.
 
-| File        | Syntax                          |
-|-------------|---------------------------------|
-| [`l1_svm.py`](l2_suite.py) | `python l1_svm.py <path_to_save_files> <num_cores>`  |
-| [`l2_svm.py`](l1_suite.py) | `python l2_svm.py <path_to_save_files> <num_cores>`  |
+| File        | Syntax                                                              | Example                             |
+|-------------|---------------------------------------------------------------------|-------------------------------------|
+| [`l1_svm.py`](l2_suite.py) | `python l1_svm.py <path_to_save_files> <num_cores>`  | `python l1_svm.py "./datasets_l2" 4`|
+| [`l2_svm.py`](l1_suite.py) | `python l2_svm.py <path_to_save_files> <num_cores>`  | `python l2_svm.py "./datasets_l2" 4`|
 
 **Analyses:** The analysis is done in R where the R-markdown file is provided. 
