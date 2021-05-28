@@ -50,9 +50,6 @@ def random_generator(distribution, state = None):
              }
     return suite[distribution]
 
-@replicate(10)
-def test():
-    return random_generator("Gaussian")
 
 if __name__ == "__main__":
     
