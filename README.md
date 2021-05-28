@@ -3,7 +3,8 @@
 
 This repository is the official codebase of --paper-- . In order to reproduce our figures, we have provided the experiments which we used for the analyses alongside with the code to produce the experiments. 
 
-![image](figures/unnamed-chunk-7-1.pdf)
+<embed src="./figures/unnamed-chunk-7-1.pdf" width="500" height="375" 
+ type="application/pdf">
 
 ## Requirements
 To install the requirements:
