@@ -261,14 +261,6 @@ formulas <- list(
   cbind(Success, Failure) ~ (tau_nonlinear + tau)*Distribution*probSize # full model
 )
 
-formulas <- list(
-  cbind(Success, Failure) ~ (tau_nonlinear + tau)*probSize,             # fix tau coeff
-  cbind(Success, Failure) ~ (tau_nonlinear + tau)*probSize*Distribution              # tau coefs only depends on probSize
-                            - Distribution       # bias is decaying
-                            -(tau_nonlinear + tau) * Distribution + tau + tau_nonlinear,
-  cbind(Success, Failure) ~ (tau_nonlinear + tau)*Distribution*probSize # full model
-)
-
 
 models <- lapply(formulas , function(formula) glm(formula, data=processed_probs, family = binomial(link="probit") ) )
 lapply(models,summary)
