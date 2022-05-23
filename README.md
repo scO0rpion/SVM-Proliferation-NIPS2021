@@ -1,7 +1,7 @@
 
 # Support vector machines and linear regression coincide with very high-dimensional features
 
-This repository is the official codebase of --paper-- . In order to reproduce our figures, we have provided the experiments which we used for the analyses alongside with the code to produce the experiments. 
+This repository is the official codebase of [ASH21](https://arxiv.org/abs/2105.14084) . In order to reproduce our figures, we have provided the experiments which we used for the analyses alongside with the code to produce the experiments. 
 
 ![image](figures/thumbnail.jpg)
 
